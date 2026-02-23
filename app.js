@@ -14,12 +14,14 @@ app.listen(process.env.PORT);
 // const userRouter = require('./routes/users');
 import userRouter from './routes/users.js';
 import bookRouter from './routes/books.js';
+import categoryRouter from './routes/category.js';
 import orderRouter from './routes/orders.js';
 import likeRouter from './routes/likes.js';
 import cartRouter from './routes/carts.js';
 
 app.use('/users', userRouter);
 app.use('/books', bookRouter);
+app.use('/category', categoryRouter);
 app.use('/orders', orderRouter);
 app.use('/likes', likeRouter);
 app.use('/carts', cartRouter);
