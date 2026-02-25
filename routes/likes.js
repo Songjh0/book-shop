@@ -1,17 +1,11 @@
 import express from 'express';
 const router = express.Router();
+import { addLike, removeLike } from '../controller/LikeController.js'; // controller 모듈
 
 router.use(express.json());
 
-// 좋아요 추가
-router.post('/:id', (req, res) => {
-  res.json('좋아요 추가');
-});
-
-// 좋아요 삭제
-router.delete('/:id', (req, res) => {
-  res.json('좋아요 삭제');
-});
+router.post('/:id', addLike); // 좋아요 추가
+router.delete('/:id', removeLike); // 좋아요 삭제
 
 
 export default router;

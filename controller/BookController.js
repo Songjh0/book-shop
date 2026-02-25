@@ -1,5 +1,5 @@
 import conn from '../mariadb.js';
-import StatusCode from 'http-status-codes'; 
+import StatusCode from 'http-status-codes';
   
 const allBooks = (req, res) => {
   // 카테고리별, 신간 여부) 전체 도서 목록 조회
@@ -14,7 +14,7 @@ const allBooks = (req, res) => {
 
   let offset = limit * (currentPage-1);
 
-  let sql = "SELECT * FROM books";
+  let sql = "SELECT *, (SELECT count(*) FROM likes WHERE books.id=likes.liked_book_id) AS likes FROM books";
   let values = [];
   if (category_id && news) { 
     sql += " WHERE category_id = ? AND pub_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW()";
@@ -26,8 +26,9 @@ const allBooks = (req, res) => {
     sql += " WHERE pub_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW()";
   }
 
-  sql += "LIMIT ? OFFSET ? "
-  values.push(limit, offset);
+  sql += " LIMIT ? OFFSET ? "
+  values.push(limit);
+  values.push(offset);
 
   conn.query(sql, values, 
     (err, results) => {
@@ -44,11 +45,18 @@ const allBooks = (req, res) => {
 };
 
 const bookDetail = (req, res) => {
-  let {id} = req.params;
+  let {user_id} = req.body;
+  let book_id = req.params.id;
 
-  let sql = `SELECT * FROM books LEFT JOIN category
-              ON books.category_id = category.id WHERE books.id = ?`;
-  conn.query(sql, id, 
+  let sql = `SELECT *,
+	                  (SELECT count(*) FROM likes WHERE liked_book_id=books.id) AS likes, 
+	                  (SELECT EXISTS (SELECT * FROM likes WHERE user_id=? AND liked_book_id=?)) AS liked
+              FROM books 
+              LEFT JOIN category 
+              ON books.category_id = category.category_id 
+              WHERE books.id = ?;`;
+  let values = [user_id, book_id, book_id]
+  conn.query(sql, values, 
     (err, results) => {
       if (err) {
         console.log(err);
