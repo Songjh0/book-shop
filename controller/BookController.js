@@ -1,26 +1,33 @@
-import conn from '../mariadb.js'; // db 모듈
-import StatusCode from 'http-status-codes'; // status code 모듈
-
-// limit : page 당 도서 수 ex.3
-  // currentPage : 현재 페이지 ex.1, 2, 3 ...
-  // offset : 
+import conn from '../mariadb.js';
+import StatusCode from 'http-status-codes'; 
   
 const allBooks = (req, res) => {
   // 카테고리별, 신간 여부) 전체 도서 목록 조회
-  let { category_id, news } = req.query;
+  let { category_id, news, limit, currentPage } = req.query;
+
+  // limit : page 당 도서 수 ex.3
+  // currentPage : 현재 페이지 ex.1, 2, 3 ...
+  // offset : 0부터 시작 ex.0, 3, 6, 9, 12 .....
+  // offset 계산방법 -> limit * (currentPage-1)
+  limit = parseInt(limit)
+  currentPage = parseInt(currentPage)
+
+  let offset = limit * (currentPage-1);
 
   let sql = "SELECT * FROM books";
   let values = [];
-  if (category_id && news) {
+  if (category_id && news) { 
     sql += " WHERE category_id = ? AND pub_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW()";
-    values = [category_id, news];
+    values = [category_id];
   } else if (category_id) {
     sql += " WHERE category_id = ?";
-    values = category_id;
+    values = [category_id];
   } else if (news) {
     sql += " WHERE pub_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW()";
-    values = news;
   }
+
+  sql += "LIMIT ? OFFSET ? "
+  values.push(limit, offset);
 
   conn.query(sql, values, 
     (err, results) => {
